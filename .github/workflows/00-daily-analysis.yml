@@ -2,6 +2,7 @@ name: 每日股票分析
 
 on:
   # 定时触发：港股、美股各自收盘后运行（cron 使用 UTC）
+  # 修改 cron 时须同步修改下方 RUN_MARKET 中的同一表达式，否则定时任务会回退为 all（两个市场都跑）
   schedule:
     - cron: '30 8 * * 1-5'     # 港股：UTC 08:30 = 北京时间 16:30（港股 16:00 收盘后）
     - cron: '30 21 * * 1-5'    # 美股：UTC 21:30 = 北京时间次日 05:30（美股 16:00 ET 收盘后，冬令时 30 分钟/夏令时 90 分钟）
@@ -449,6 +450,7 @@ jobs:
           # 美股/港股分市场自选股：定时任务按触发的 cron 选择对应列表与大盘复盘区域
           US_STOCK_LIST: ${{ vars.US_STOCK_LIST || secrets.US_STOCK_LIST || 'AAPL,NVDA,MSFT' }}
           HK_STOCK_LIST: ${{ vars.HK_STOCK_LIST || secrets.HK_STOCK_LIST || 'hk00700,hk09988' }}
+          # cron 表达式须与 on.schedule 保持一致
           RUN_MARKET: ${{ github.event.schedule == '30 8 * * 1-5' && 'hk' || github.event.schedule == '30 21 * * 1-5' && 'us' || github.event.inputs.market || 'all' }}
           # 美股/港股日线优先走 Yahoo Finance
           YFINANCE_PRIORITY: ${{ vars.YFINANCE_PRIORITY || secrets.YFINANCE_PRIORITY || '0' }}
