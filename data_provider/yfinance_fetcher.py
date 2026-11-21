@@ -16,7 +16,7 @@ YfinanceFetcher - 兜底数据源 (Priority 4)
 
 import csv
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import StringIO
 from typing import Optional, List, Dict, Any
 from urllib.error import HTTPError, URLError
@@ -203,14 +203,17 @@ class YfinanceFetcher(BaseFetcher):
         # 转换代码格式
         yf_code = self._convert_stock_code(stock_code)
 
-        logger.debug(f"调用 yfinance.download({yf_code}, {start_date}, {end_date})")
+        # yfinance 的 end 为开区间，+1 天以包含 end_date 当日（如收盘后运行时的当日日线）
+        yf_end = (datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+
+        logger.debug(f"调用 yfinance.download({yf_code}, {start_date}, {yf_end})")
 
         try:
             # 使用 yfinance 下载数据
             df = yf.download(
                 tickers=yf_code,
                 start=start_date,
-                end=end_date,
+                end=yf_end,
                 progress=False,  # 禁止进度条
                 auto_adjust=True,  # 自动调整价格（复权）
                 multi_level_index=True
